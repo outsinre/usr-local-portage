@@ -26,7 +26,6 @@ RDEPEND=""
 
 DEPEND="
 	dev-lang/go
-	dev-vcs/git
 "
 
 # ${WORKDIR} = ${PORTAGE_BUILDDIR}/work = ${PORTAGE_TMPDIR}/portage/${CATEGORY}/${PF}/work = /var/tmp/portage/net-proxy/obfs4proxy-${PVR}/work
@@ -55,4 +54,6 @@ src_compile() {
 src_install() {
 	into /usr/bin
 	dobin ${GOPATH}/bin/obfs4proxy
+	docinto /usr/share/doc/${PF}
+	dodoc README ChangeLog
 }
