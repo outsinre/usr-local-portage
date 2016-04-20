@@ -30,7 +30,7 @@ DEPEND="
 "
 
 # ${WORKDIR} = ${PORTAGE_BUILDDIR}/work = ${PORTAGE_TMPDIR}/portage/${CATEGORY}/${PF}/work = /var/tmp/portage/net-proxy/obfs4proxy-${PVR}/work
-# ${S} = ${WORKDIR}/${P} = work/obfs4proxy-${P}
+# ${S} = ${WORKDIR}/${P} = work/obfs4proxy-${PV}
 PREFIX_DIR="git.torproject.org/pluggable-transports"
 SOURCE_DIR="${WORKDIR}/src/${PREFIX_DIR}/obfs4.git"
 
