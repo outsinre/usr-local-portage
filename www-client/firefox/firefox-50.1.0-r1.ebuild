@@ -25,7 +25,7 @@ if [[ ${MOZ_ESR} == 1 ]]; then
 fi
 
 # Patch version
-PATCH="${PN}-49.0-patches-02"
+PATCH="${PN}-50.0-patches-02"
 MOZ_HTTP_URI="https://archive.mozilla.org/pub/${PN}/releases"
 
 MOZCONFIG_OPTIONAL_GTK2ONLY=1
@@ -41,7 +41,7 @@ KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~ia64 ~ppc ~ppc64 ~x86 ~amd64-linux ~x86-lin
 
 SLOT="0"
 LICENSE="MPL-2.0 GPL-2 LGPL-2.1"
-IUSE="bindist hardened +hwaccel pgo selinux +gmp-autoupdate test"
+IUSE="bindist hardened +hwaccel jack pgo selinux +gmp-autoupdate test"
 RESTRICT="!bindist? ( bindist )"
 
 PATCH_URIS=( https://dev.gentoo.org/~{anarchy,axs,polynomial-c}/mozilla/patchsets/${PATCH}.tar.xz )
@@ -52,7 +52,8 @@ SRC_URI="${SRC_URI}
 ASM_DEPEND=">=dev-lang/yasm-1.1"
 
 RDEPEND="
-	>=dev-libs/nss-3.25
+	jack? ( virtual/jack )
+	>=dev-libs/nss-3.26.2
 	>=dev-libs/nspr-4.12
 	selinux? ( sec-policy/selinux-mozilla )"
 
@@ -66,6 +67,11 @@ S="${WORKDIR}/firefox-${MOZ_PV}"
 QA_PRESTRIPPED="usr/lib*/${PN}/firefox"
 
 BUILD_OBJ_DIR="${S}/ff"
+
+# dependencies newer than specified in the eclass
+RDEPEND="${RDEPEND}
+	>=media-libs/libpng-1.6.23
+	"
 
 pkg_setup() {
 	moz_pkgsetup
@@ -114,12 +120,24 @@ src_unpack() {
 src_prepare() {
 	# Apply our patches
 	eapply "${WORKDIR}/firefox" \
+		"${FILESDIR}"/mozilla_configure_regexp.patch \
+		"${FILESDIR}"/update_h2_curve.patch \
 		"${FILESDIR}"/${PN}-48.0-pgo.patch
 
 	# Enable gnomebreakpad
 	if use debug ; then
 		sed -i -e "s:GNOME_DISABLE_CRASH_DIALOG=1:GNOME_DISABLE_CRASH_DIALOG=0:g" \
 			"${S}"/build/unix/run-mozilla.sh || die "sed failed!"
+	fi
+
+	# Drop -Wl,--as-needed related manipulation for ia64 as it causes ld sefgaults, bug #582432
+	if use ia64 ; then
+		sed -i \
+		-e '/^OS_LIBS += no_as_needed/d' \
+		-e '/^OS_LIBS += as_needed/d' \
+		"${S}"/widget/gtk/mozgtk/gtk2/moz.build \
+		"${S}"/widget/gtk/mozgtk/gtk3/moz.build \
+		|| die "sed failed to drop --as-needed for ia64"
 	fi
 
 	# Ensure that our plugins dir is enabled as default
@@ -179,6 +197,9 @@ src_configure() {
 
 	mozconfig_init
 	mozconfig_config
+
+	# enable JACK, bug 600002
+	mozconfig_use_enable jack
 
 	# It doesn't compile on alpha without this LDFLAGS
 	use alpha && append-ldflags "-Wl,--no-relax"
