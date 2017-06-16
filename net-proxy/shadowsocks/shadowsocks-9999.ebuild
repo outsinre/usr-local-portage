@@ -8,7 +8,7 @@ PYTHON_COMPAT=( python2_7 )
 
 inherit eutils distutils-r1 git-2
 
-DESCRIPTION=" A fast tunnel proxy that helps you bypass firewalls"
+DESCRIPTION="A fast tunnel proxy that helps you bypass firewalls"
 HOMEPAGE="http://shadowsocks.org/"
 
 EGIT_REPO_URI="git://github.com/shadowsocks/shadowsocks.git"
